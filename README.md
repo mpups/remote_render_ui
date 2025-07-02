@@ -28,25 +28,50 @@ The following dependencies are cloned and built as submodules (so do not need to
 - [videolib](https://github.com/markp-gc/videolib): A wrapper for FFmpeg that supports TCP video streaming using packetcomms.
 
 
-## Building
+#### Build instructions
 
-Install the dependencies above and then build using CMake:
+On Ubuntu run the following to perform a complete configuration and build from scratch:
 
-```
-git clone --recursive https://github.com/markp-gc/remote_render_ui
+```shell
+sudo apt update
+sudo apt install libglfw3-dev libboost-dev libboost-log-dev libboost-program-options-dev cmake ninja-build libopencv-dev libxinerama-dev libxcursor-dev libxi-dev libboost-test-dev nasm libx264-dev pkg-config
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+pip install nanobind opencv-python diffusers sentencepiece accelerate
+
+git clone --recursive https://github.com/graphcore-research/remote-gen-ui.git
+cd remote-gen-ui/
 mkdir remote_render_ui/build
 cd remote_render_ui/build
-cmake -G Ninja ..
-ninja -j16
+
+cd ../external/FFmpeg/
+mkdir ../install
+./configure --enable-shared --enable-libx264 --enable-gpl --disable-programs --enable-rpath --prefix=`realpath ../install`
+make -j64
+make install
+
+cd ../../
+mkdir build
+cd build
+PKG_CONFIG_PATH=`realpath ../external/install/lib/pkgconfig/` cmake -G Ninja ..
+ninja -j64
 ```
 
+#### Mac OSX
 
-## Running
+Typically you will only run the client application on your Mac and the server runs on a remote server (especially given that the Python server code requires Cuda).
 
-1. Launch the remote application on the remote host. Wait until it logs that it is waiting for connection.
+1. Launch the server:
+
+```shell
+PYTHONPATH=./ python ../python/run_server.py --port 4000
+```
+2. Wait until it logs that it is waiting for connection.
   - E.g.: `[12:26:06.674469] [I] [51157] User interface server listening on port 4000`
 
-2. Launch the client (this program) and connect to the same port:
-  - E.g.: `./remote-ui --hostname <remote-hostname-or-IP-address> --port 4000 --nif-paths ../nifs.json`
-  - The JSON file contains a list of paths to NIF models *on the remote*. These will be selectable in the UI.
-  - Run with `--help` for a full list of options.
+3. Launch the client and connect to the same port:
+  - (Run with `--help` for a full list of options).
+
+```shell
+./remote-ui --host localhost --port 4000
+```
