@@ -40,9 +40,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    ServerState initialState;
+    initialState.value = 4.2;
+
     // Create a simple test image to send periodically
     cv::Mat testImage(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
     server.initialiseVideoStream(testImage.cols, testImage.rows);
+    server.syncClientUI();
+    server.syncState(initialState);
 
     // Main loop - keep running until interrupted
     try {

@@ -22,11 +22,10 @@ std::uint32_t convertSampleValue(float value) {
 
 ControlsForm::ControlsForm(nanogui::Screen* screen,
                            PacketMuxer& sender,
-                           PacketDemuxer& receiver,
-                           VideoPreviewWindow* videoPreview)
+                           PacketDemuxer& receiver)
     : nanogui::FormHelper(screen),
       saveButton(nullptr),
-      preview(videoPreview)
+      preview(nullptr)
 {
   window = add_window(nanogui::Vector2i(10, 10), "Control");
 
@@ -94,6 +93,16 @@ ControlsForm::ControlsForm(nanogui::Screen* screen,
     saveImage();
   });
   saveButton->set_tooltip("Save preview image locally.");
+
+  subs["state"] = receiver.subscribe("state",
+    [&](const ComPacket::ConstSharedPacket& packet) {
+      ServerState state;
+      deserialise(packet, state);
+      BOOST_LOG_TRIVIAL(info) << "Received full state update: " << state.toString();
+        // Update UI controls to match the server state:
+        slider->set_value(state.value / 10.0f); // Convert back from 0-10 range to 0-1
+    }
+  );
 }
 
 void ControlsForm::set_position(const nanogui::Vector2i& pos) {
@@ -101,7 +110,9 @@ void ControlsForm::set_position(const nanogui::Vector2i& pos) {
 }
 
 void ControlsForm::saveImage() const {
-  const std::string fn = "preview.png";
-  BOOST_LOG_TRIVIAL(info) << "Saving image as " << fn;
-  cv::imwrite(fn, preview->getImage());
+  if (preview) {
+    const std::string fn = "preview.png";
+    BOOST_LOG_TRIVIAL(info) << "Saving image as " << fn;
+    cv::imwrite(fn, preview->getImage());
+  }
 }

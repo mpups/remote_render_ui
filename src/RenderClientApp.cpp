@@ -14,9 +14,10 @@ RenderClientApp::RenderClientApp(const nanogui::Vector2i& size, PacketMuxer& tx,
       form(nullptr) {
 
   syncWithServer(tx, rx, "ready");
-
+  form = new ControlsForm(this, tx, rx);
+  syncWithServer(tx, rx, "ui_ready");
   preview = new VideoPreviewWindow(this, "Render Preview", rx);
-  form = new ControlsForm(this, tx, rx, preview);
+  form->setPreviewWindow(preview);
 
   // Have to manually set positions due to bug in ComboBox:
   const int margin = 10;
@@ -27,8 +28,7 @@ RenderClientApp::RenderClientApp(const nanogui::Vector2i& size, PacketMuxer& tx,
   perform_layout();
 }
 
-RenderClientApp::~RenderClientApp() {
-}
+RenderClientApp::~RenderClientApp() {}
 
 bool RenderClientApp::keyboard_event(int key, int scancode, int action, int modifiers) {
   if (Screen::keyboard_event(key, scancode, action, modifiers)) {

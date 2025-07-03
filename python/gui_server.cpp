@@ -14,11 +14,11 @@ NB_MODULE(gui_server, m) {
 
     m.def("set_log_level", &InterfaceServer::setLogLevel);
 
-    nb::class_<InterfaceServer::State>(m, "State")
+    nb::class_<ServerState>(m, "State")
         .def(nb::init<>())
-        .def("__repr__", &InterfaceServer::State::toString)
-        .def_rw("value", &InterfaceServer::State::value)
-        .def_rw("stop", &InterfaceServer::State::stop);
+        .def("__repr__", &ServerState::toString)
+        .def_rw("value", &ServerState::value)
+        .def_rw("stop", &ServerState::stop);
 
     nb::class_<InterfaceServer>(m, "InterfaceServer")
         .def(nb::init<int>(), "port"_a)
@@ -31,6 +31,8 @@ NB_MODULE(gui_server, m) {
         .def("initialise_video_stream", &InterfaceServer::initialiseVideoStream,
              "width"_a, "height"_a)
         .def("stop", &InterfaceServer::stop)
+        .def("sync_state", &InterfaceServer::syncState)
+        .def("sync_client_ui", &InterfaceServer::syncClientUI)
         .def("send_image", [](InterfaceServer& self, nb::ndarray<nb::numpy, uint8_t, nb::shape<-1, -1, 3>> array, bool convertToBGR) {
             // Convert numpy array to cv::Mat
             int height = array.shape(0);

@@ -13,10 +13,20 @@ while not server.wait_until_ready(500):
     # Wait forever: this loop keeps the Python code responsive to ctrl-C
     None
 
-gui_server.set_log_level("off")
+gui_server.set_log_level('off')
 
-test_image = np.zeros((480, 640, 3), dtype=np.uint8)
-server.initialise_video_stream(test_image.shape[1], test_image.shape[0])
+state = gui_server.State()
+state.value = 4.0
+
+width = 1024
+height = 1024
+
+server.initialise_video_stream(width, height)
+server.sync_client_ui()
+server.sync_state(state)
+
+# Create a zeroed RGB image array
+test_image = np.zeros((height, width, 3), dtype=np.uint8)
 
 # Initialize frame offset for scrolling effect
 frame_offset = 0

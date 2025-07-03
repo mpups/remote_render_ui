@@ -20,7 +20,7 @@ VideoPreviewWindow::VideoPreviewWindow(
       runDecoderThread(true) {
   using namespace nanogui;
   using namespace std::chrono_literals;
-  bool videoOk = videoClient->initialiseVideoStream(5s);
+  bool videoOk = videoClient->initialiseVideoStream(10s);
 
   if (videoOk) {
     // Allocate a buffer to store the decoded and converted images:

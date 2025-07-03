@@ -18,9 +18,15 @@ class ControlsForm : public nanogui::FormHelper {
 public:
   using FileLookup = std::map<std::string, std::string>;
 
-  ControlsForm(nanogui::Screen* screen, PacketMuxer& sender, PacketDemuxer& receiver, VideoPreviewWindow* videoPreview);
+  ControlsForm(nanogui::Screen* screen,
+               PacketMuxer& sender,
+               PacketDemuxer& receiver);
 
   void set_position(const nanogui::Vector2i& pos);
+
+  void setPreviewWindow(VideoPreviewWindow* p) {
+    preview = p;
+  }
 
   nanogui::TextBox* bitRateText;
   nanogui::TextBox* frameRateText;

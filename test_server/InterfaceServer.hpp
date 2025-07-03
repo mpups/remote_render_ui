@@ -41,10 +41,10 @@ class InterfaceServer {
         if (connection) {
             BOOST_LOG_TRIVIAL(debug) << "User interface client connected.";
             connection->setBlocking(false);
-            PacketDemuxer receiver(*connection, packets::packetTypes);
+            receiver.reset(new PacketDemuxer(*connection, packets::packetTypes));
             sender.reset(new PacketMuxer(*connection, packets::packetTypes));
 
-            syncWithClient(*sender, receiver, "ready");
+            syncWithClient(*sender, *receiver, "ready");
             BOOST_LOG_TRIVIAL(debug) << "Comms synchronised.";
 
             // Lambda that enqueues video packets via the Muxing system:
@@ -60,14 +60,14 @@ class InterfaceServer {
             videoStream.reset(new LibAvWriter(videoIO));
             BOOST_LOG_TRIVIAL(debug) << "Video stream initialised.";
 
-            auto subs1 = receiver.subscribe("stop",
+            auto subs1 = receiver->subscribe("stop",
                                             [&](const ComPacket::ConstSharedPacket& packet) {
                                                 deserialise(packet, state.stop);
                                                 BOOST_LOG_TRIVIAL(trace) << "Render stopped by remote UI.";
                                                 stateUpdated = true;
                                             });
 
-            auto subs2 = receiver.subscribe("value",
+            auto subs2 = receiver->subscribe("value",
                                             [&](const ComPacket::ConstSharedPacket& packet) {
                                                 deserialise(packet, state.value);
                                                 BOOST_LOG_TRIVIAL(trace) << "New value: " << state.value;
@@ -76,7 +76,7 @@ class InterfaceServer {
 
             BOOST_LOG_TRIVIAL(info) << "User interface server entering Tx/Rx loop.";
             serverReady = true;
-            while (serverReady && receiver.ok()) {
+            while (serverReady && receiver->ok()) {
                 std::this_thread::sleep_for(5ms);
             }
             BOOST_LOG_TRIVIAL(info) << "User interface server Tx/Rx loop exited.";
@@ -91,6 +91,10 @@ class InterfaceServer {
 
 public:
 
+    void syncClientUI() {
+        syncWithClient(*sender, *receiver, "ui_ready");
+    }
+
     static void setLogLevel(const std::string& string) {
         namespace logging = boost::log;
         std::stringstream ss(string);
@@ -98,16 +102,6 @@ public:
         ss >> level;
         logging::core::get()->set_filter(logging::trivial::severity >= level);
     }
-
-    struct State {
-        State() : value(1.f), stop(false) {}
-        std::string toString() const{
-            return "State(value=" + std::to_string(value) + ", stop=" + std::to_string(stop) + ")";
-        }
-
-        float value;
-        bool stop;
-    };
 
     InterfaceServer(int portNumber)
         : port(portNumber),
@@ -119,13 +113,13 @@ public:
     }
 
     /// Return a copy of the state and mark it as consumed:
-    State consumeState() {
-        State tmp = state;
+    ServerState consumeState() {
+        ServerState tmp = state;
         stateUpdated = false;  // Clear the update flag.
         return tmp;
     }
 
-    const State& getState() const {
+    const ServerState& getState() const {
         return state;
     }
 
@@ -167,9 +161,9 @@ public:
 
     void initialiseVideoStream(std::size_t width, std::size_t height) {
         if (videoStream) {
-        videoStream->AddVideoStream(width, height, 30, video::FourCc('F', 'M', 'P', '4'));
+            videoStream->AddVideoStream(width, height, 30, video::FourCc('F', 'M', 'P', '4'));
         } else {
-        BOOST_LOG_TRIVIAL(warning) << "No object to add video stream to.";
+            BOOST_LOG_TRIVIAL(warning) << "No object to add video stream to.";
         }
     }
 
@@ -193,6 +187,13 @@ public:
         }
     }
 
+    void syncState(const ServerState& s) {
+        if (sender) {
+            state = s;
+            serialise(*sender, "state", s);
+        }
+    }
+
     void sendImage(const cv::Mat& ldrImage) {
         VideoFrame frame(ldrImage.data, AV_PIX_FMT_BGR24, ldrImage.cols, ldrImage.rows, ldrImage.step);
         bool ok = videoStream->PutVideoFrame(frame);
@@ -213,6 +214,7 @@ private:
     std::atomic<bool> stateUpdated;
     std::unique_ptr<TcpSocket> connection;
     std::unique_ptr<PacketMuxer> sender;
+    std::unique_ptr<PacketDemuxer> receiver;
     std::unique_ptr<LibAvWriter> videoStream;
-    State state;
+    ServerState state;
 };
