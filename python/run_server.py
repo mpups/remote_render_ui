@@ -1,3 +1,12 @@
+import os
+
+# On Windows we need to set the DLL paths:
+if hasattr(os, 'add_dll_directory'):
+    os.add_dll_directory(r'C:\msys64\ucrt64\bin')
+    os.add_dll_directory(r'C:\msys64\mingw64\bin')
+    os.add_dll_directory(r'C:\Users\mpup\workspace\remote_render_ui\external\install\bin')
+    os.add_dll_directory(r'C:\Users\mpup\workspace\remote_render_ui\build\external\nanogui')
+
 import gui_server
 import numpy as np
 import time

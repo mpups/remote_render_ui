@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(remote-ui)
 
@@ -8,6 +8,24 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
+
+message(STATUS "Check for MINGW")
+IF (MINGW)
+ENDIF()
+
+find_package(Boost REQUIRED COMPONENTS program_options log)
+find_package(OpenGL REQUIRED)
+find_package(OpenCV REQUIRED)
+
+# Python needed for nanobind:
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+
+# Detect the installed nanobind package and import it into CMake
+execute_process(
+  COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_DIR)
+message(STATUS "Using nanobind config from: ${nanobind_DIR}")
+find_package(nanobind CONFIG REQUIRED)
 
 # Apply a nanogui patch using git and check it was successful
 set(CURRENT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -26,10 +44,6 @@ if(NOT ${GIT_RESULT} EQUAL 0)
 else()
   message(STATUS "Successfully applied nanogui patch")
 endif()
-
-find_package(OpenGL REQUIRED)
-find_package(Boost REQUIRED COMPONENTS program_options log)
-find_package(OpenCV REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -52,16 +66,6 @@ add_subdirectory(external/packetcomms)
 add_subdirectory(external/videolib)
 
 include_directories(${NANOGUI_EXTRA_INCS} ${PACKETCOMMS_INCLUDES} ${VIDEOLIB_INCLUDES} ${OpenCV_INCLUDE_DIRS})
-
-# Configure nanobind module:
-find_package(Python 3.10 EXACT COMPONENTS Interpreter Development.Module REQUIRED)
-
-# Detect the installed nanobind package and import it into CMake
-execute_process(
-  COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-  OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_DIR)
-find_package(nanobind CONFIG REQUIRED)
-
 nanobind_add_module(gui_server python/gui_server.cpp)
 
 # Build the interface app:

@@ -28,17 +28,30 @@ The following dependencies are cloned and built as submodules (so do not need to
 - [videolib](https://github.com/markp-gc/videolib): A wrapper for FFmpeg that supports TCP video streaming using packetcomms.
 
 
-#### Build instructions
+#### Install Dependencies
 
-On Ubuntu run the following to perform a complete configuration and build from scratch:
-
+On Ubuntu (apt):
 ```shell
 sudo apt update
 sudo apt install libglfw3-dev libboost-dev libboost-log-dev libboost-program-options-dev cmake ninja-build libopencv-dev libxinerama-dev libxcursor-dev libxi-dev libboost-test-dev nasm libx264-dev pkg-config
+```
 
+On Windows (mingw, msys2 pacman):
+```shell
+pacman -S mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-glew mingw-w64-ucrt-x86_64-glfw mingw-w64-x86_64-boost mingw-w64-ucrt-x86_64-opencv mingw-w64-ucrt-x86_64-libx264 nasm mingw-w64-ucrt-x86_64-python-virtualenv python-pip
+```
+
+Python (create a venv):
+```shell
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 pip install nanobind opencv-python diffusers sentencepiece accelerate
+```
 
+#### Build instructions
+
+With the dependencies above installed, run the following to perform a complete configuration and build from scratch:
+
+```shell
 git clone --recursive https://github.com/graphcore-research/remote-gen-ui.git
 cd remote-gen-ui/
 mkdir remote_render_ui/build
@@ -57,9 +70,9 @@ PKG_CONFIG_PATH=`realpath ../external/install/lib/pkgconfig/` cmake -G Ninja ..
 ninja -j64
 ```
 
-#### Mac OSX
+#### Run
 
-Typically you will only run the client application on your Mac and the server runs on a remote server (especially given that the Python server code requires Cuda).
+Typically you will only run the client application on your local machine and the server runs on a remote machine.
 
 1. Launch the server:
 
