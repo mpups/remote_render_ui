@@ -33,7 +33,7 @@ The following dependencies are cloned and built as submodules (so do not need to
 On Ubuntu (apt):
 ```shell
 sudo apt update
-sudo apt install libglfw3-dev libboost-dev libboost-log-dev libboost-program-options-dev cmake ninja-build libopencv-dev libxinerama-dev libxcursor-dev libxi-dev libboost-test-dev nasm libx264-dev pkg-config
+sudo apt install libglfw3-dev libboost-dev libboost-log-dev libboost-program-options-dev cmake ninja-build libucx0 libopencv-dev libxinerama-dev libxcursor-dev libxi-dev libboost-test-dev nasm libx264-dev pkg-config
 ```
 
 On Windows (mingw, msys2 pacman):
@@ -52,12 +52,9 @@ pip install nanobind opencv-python diffusers sentencepiece accelerate
 With the dependencies above installed, run the following to perform a complete configuration and build from scratch:
 
 ```shell
-git clone --recursive https://github.com/graphcore-research/remote-gen-ui.git
-cd remote-gen-ui/
-mkdir remote_render_ui/build
-cd remote_render_ui/build
+git clone --recursive https://github.com/mpups/remote_render_ui.git
 
-cd ../external/FFmpeg/
+cd remote_render_ui/external/FFmpeg/
 mkdir ../install
 ./configure --enable-shared --enable-libx264 --enable-gpl --disable-programs --enable-rpath --prefix=`realpath ../install`
 make -j64
@@ -79,7 +76,7 @@ Typically you will only run the client application on your local machine and the
 ```shell
 PYTHONPATH=./ python ../python/run_server.py --port 4000
 ```
-2. Wait until it logs that it is waiting for connection.
+2. Wait until the logs shows waiting for connection.
   - E.g.: `[12:26:06.674469] [I] [51157] User interface server listening on port 4000`
 
 3. Launch the client and connect to the same port:
