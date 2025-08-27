@@ -9,10 +9,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-message(STATUS "Check for MINGW")
-IF (MINGW)
-ENDIF()
-
 find_package(Boost REQUIRED COMPONENTS program_options log)
 find_package(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -47,11 +43,13 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-# GLFW does not compile without warnings:
-add_compile_options(-Wno-sign-compare -Wno-missing-field-initializers -Wno-type-limits)
+if (NOT MSVC)
+  # GLFW does not compile without warnings so specifically enable useful warnings:
+  add_compile_options(-Wno-sign-compare -Wno-missing-field-initializers -Wno-type-limits)
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+endif()
 
 # Configure nanogui subproject:
 set(NANOGUI_BUILD_EXAMPLE OFF CACHE BOOL " " FORCE)
